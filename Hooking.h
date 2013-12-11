@@ -10,6 +10,7 @@
 #ifdef _WIN32
 #define ASM_START _asm {
 #define ASM_END }
+#define ASM_MACRO_SS _asm
 #define EXPORT _declspec(dllexport)
 #define FASTCALL __fastcall
 #define NAKED _declspec(naked)
@@ -24,6 +25,29 @@
 
 //addr is temporary, will be replaced with symbol/signature later
 #define HOOKMEMBERFUNCTION(funcName, addr) void hook_funcName();
+
+#define HOOKDEST_DECL(classname) friend class classname##_init; \
+	public: \
+	static std::unordered_map<std::string, void*> m_selfFuncAddrs; \
+	static std::unordered_map<std::string, void*> m_funcAddrs; 
+#define HOOKDEST_DEF(classname) std::unordered_map<std::string, void*> PluginTitle::m_selfFuncAddrs; \
+std::unordered_map<std::string, void*> PluginTitle::m_funcAddrs;
+
+#define HOOKTABLE_START(classname) template<typename T> \
+	struct classname##_hookinit { \
+	classname##_hookinit() { 
+
+#define SETUPHOOKEDFUNC(tgtClassname, funcName) T::m_selfFuncAddrs[ #funcName ] = &(void*&)T::##funcName; \
+	g_hookedClasses[ #tgtClassname ]->hookMemberFunc( #funcName , &(void*&)T::##funcName);
+
+#define HOOKTABLE_END(classname) }}; \
+	static classname##_hookinit<##classname##> classname##_init;
+
+#define CALL_FUNC(funcName, addrVarName) addrVarName = m_funcAddrs[ #funcName ]; \
+	ASM_START \
+		ASM_MACRO_SS mov ecx, this \
+		ASM_MACRO_SS call addrVarName \
+	ASM_END
 
 class ClassHooker;
 extern std::unordered_map<std::string, ClassHooker*> g_hookedClasses;

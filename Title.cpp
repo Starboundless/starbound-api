@@ -22,33 +22,29 @@ struct TitleStruct
 //plugin
 
 //figuring out how to do the plugin side
-class PluginTitle : public TitleStruct
+struct PluginTitle : public TitleStruct
 {
-	friend class PluginTitle_hookinit;
 	void update(ClassHooker *ch)
 	{
 		ch->unhookMemberFunc("update");
-		void* dest = (void*)0x00419500;
-		ASM_START
-			mov ecx, this
-			call dest
-		ASM_END
+		void* funcAddr;
+		CALL_FUNC(update, funcAddr);
 		ch->hookMemberFunc("update", m_selfFuncAddrs["update"]);
 		return;
 	}
-	public:
-		static std::unordered_map<std::string, void*> m_selfFuncAddrs;
+	HOOKDEST_DECL(PluginTitle)
 };
-std::unordered_map<std::string, void*> PluginTitle::m_selfFuncAddrs;
+HOOKDEST_DEF(PluginTitle)
 
-class PluginTitle_hookinit
-{
-	public:
-		PluginTitle_hookinit()
-		{
-			PluginTitle::m_selfFuncAddrs["update"] = &(void*&)PluginTitle::update;
-			g_hookedClasses["Title"]->hookMemberFunc("update", &(void*&)PluginTitle::update);
-		}
-};
+HOOKTABLE_START(PluginTitle)
+	SETUPHOOKEDFUNC(Title, update)
+HOOKTABLE_END(PluginTitle)
 
-static PluginTitle_hookinit init;
+/*template<typename T> struct PluginTitle_hookinit { 
+	PluginTitle_hookinit() 
+	{
+		T::m_selfFuncAddrs[ "update" ] = &(void*&)T::update; 
+		g_hookedClasses[ "Title" ]->hookMemberFunc( "update" , &(void*&)T::update);
+	}
+}; 
+static PluginTitle_hookinit<PluginTitle> PluginTitle_init;*/
