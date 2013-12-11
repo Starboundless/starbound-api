@@ -12,5 +12,5 @@ add_library(SBAPIDll SHARED
 	main.h
 	Hooking.h
 	Hooking.cpp
-	UniverseServer.cpp
+	Title.cpp
 )

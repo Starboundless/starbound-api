@@ -18,4 +18,12 @@ BOOL WINAPI DllMain(
 		case DLL_PROCESS_DETACH:
 			break;
 	}
+	return true;
+}
+
+extern "C"
+{
+	_declspec(dllexport) void dummy()
+	{
+	}
 }
